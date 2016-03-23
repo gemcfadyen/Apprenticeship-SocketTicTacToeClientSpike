@@ -9,16 +9,13 @@ import java.net.Socket;
 public class Client {
 
     public static void main(String[] args) throws IOException {
-
-        Socket socket = new Socket("localhost", 8080);
+        Socket socket = getSocketConnection();
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
         PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
         requestGameOptions(out);
-
         interpretServerMessage(in, stdIn);
-
         requestUserInput();
         interpretServerMessage(in, stdIn);
 
@@ -30,7 +27,6 @@ public class Client {
         out.println("Request: Get-Player-Options");
     }
 
-    //Could say if data from socket starts with "Display:" then print the rest of the line
     private static void interpretServerMessage(BufferedReader in, BufferedReader stdIn) throws IOException {
         String fromServer;
 
@@ -47,11 +43,15 @@ public class Client {
     }
 
     private static void requestValidation(String input) throws IOException {
-        Socket socket = new Socket("localhost", 8080);
+        Socket socket = getSocketConnection();
         PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
         System.out.println("[Client] Sending back the value read in from the command line.");
         out.println("Validate: " + input + "\n");
+    }
+
+    private static Socket getSocketConnection() throws IOException {
+        return new Socket("localhost", 8080);
     }
 
 
@@ -63,7 +63,7 @@ public class Client {
     }
 
     private static void requestUserInput() throws IOException {
-        Socket socket = new Socket("localhost", 8080);
+        Socket socket = getSocketConnection();
         PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
         System.out.println("[Client] Ask for user to provide input....");
