@@ -6,6 +6,8 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
+import org.json.JSONObject;
+
 public class Client {
 
     public static void main(String[] args) throws IOException {
@@ -17,11 +19,10 @@ public class Client {
 
         requestGameOptions(out);
 
-        interpretServerMessage(in, stdIn);
+        interpretServerMessage(in, stdIn, out);
 
         requestUserInput();
-        interpretServerMessage(in, stdIn);
-
+        interpretServerMessage(in, stdIn, out);
     }
 
 
@@ -31,22 +32,27 @@ public class Client {
     }
 
     //Could say if data from socket starts with "Display:" then print the rest of the line
-    private static void interpretServerMessage(BufferedReader in, BufferedReader stdIn) throws IOException {
+    private static void interpretServerMessage(BufferedReader in, BufferedReader stdIn, PrintWriter out) throws IOException {
         String fromServer;
 
         while ((fromServer = in.readLine()) != null) {
             System.out.println("[Client] Received back from server: " + fromServer);
 
-            if (fromServer.startsWith("Display:")) {
-                System.out.println("[Client] received from server: " + fromServer);
-            } else if (fromServer.startsWith("Read:")) {
-                String input  =  readInputFromCommandLine(stdIn);
-                requestValidation(input);
+            JSONObject jsonObject = new JSONObject(fromServer);
+            System.out.println("[CLIENT ACTION] " + jsonObject.getString("action"));
+
+            if (jsonObject.getString("action").equals("Display")) {
+                System.out.println("[Client] Please choose a player type: (1) " + jsonObject.get("1") + " (2) " + jsonObject.get("2") + " (3) " + jsonObject.get("3"));
+            } else if (jsonObject.getString("action").equals("Display-Next-Move")) {
+                System.out.println("[Client] Prompt user for next move");
+            } else if (jsonObject.getString("action").equals("Read-CL-Input")) {
+                String input = readInputFromCommandLine(stdIn);
+                requestValidation(input, out);
             }
         }
     }
 
-    private static void requestValidation(String input) throws IOException {
+    private static void requestValidation(String input, PrintWriter hout) throws IOException {
         Socket socket = new Socket("localhost", 8080);
         PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
